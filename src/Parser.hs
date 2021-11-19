@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Parser where
 
 import Control.Monad (MonadPlus (mzero))
