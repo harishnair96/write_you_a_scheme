@@ -22,6 +22,14 @@ lexer =
         Tok.opLetter = mzero
       }
 
+parseExpr :: Parser LispVal
+parseExpr =
+  try parseNil
+    <|> try parseBool
+    <|> try parseNumber
+    <|> try parseAtom
+    <|> try parseString
+
 parseAtom :: Parser LispVal
 parseAtom = do
   tok <- Tok.identifier lexer
