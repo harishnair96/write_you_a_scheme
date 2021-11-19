@@ -6,7 +6,7 @@ import Control.Monad (MonadPlus (mzero))
 import Data.Functor.Identity (Identity)
 import qualified Data.Text as T
 import LispVal (LispVal (Atom, Bool, Nil, Number, String, List))
-import Text.Parsec (alphaNum, char, digit, letter, many, many1, noneOf, oneOf, sepBy, skipMany1, space, spaces, string, try, (<|>))
+import Text.Parsec (alphaNum, char, digit, letter, many, many1, noneOf, oneOf, sepBy, skipMany1, space, spaces, string, try, (<|>), newline)
 import qualified Text.Parsec.Language as Lang
 import Text.Parsec.Text (Parser)
 import qualified Text.Parsec.Token as Tok
@@ -32,9 +32,9 @@ parseExpr =
     <|> try parseAtom
     <|> try parseString
 
-parseAtom :: Parser LispVal
+parseAtom :: Parser LispVal -- TODO: Atoms can contain more than alphanum (parse other operators too)
 parseAtom = do
-  tok <- Tok.identifier lexer
+  tok <- many1 alphaNum 
   return (Atom $ T.pack tok)
 
 parseString :: Parser LispVal
@@ -73,7 +73,13 @@ parseBool = do
       string "#f"
       return False
 
-parseQuote :: Parser LispVal
+parseList :: Parser LispVal 
+parseList = do
+    items <- sepBy parseExpr (many1 space <|> many1 newline )
+    return (List items)
+
+
+parseQuote :: Parser LispVal -- TODO: Use separate type for quote?
 parseQuote = do
     char '\''
     body <- parseExpr
