@@ -4,7 +4,7 @@ import Control.Monad (MonadPlus (mzero))
 import Data.Functor.Identity (Identity)
 import qualified Data.Text as T
 import LispVal (LispVal (Atom, Bool, Nil, Number, String))
-import Text.Parsec (alphaNum, char, digit, letter, many, noneOf, oneOf, sepBy, skipMany1, space, spaces, string, (<|>))
+import Text.Parsec (alphaNum, char, digit, letter, many, many1, noneOf, oneOf, sepBy, skipMany1, space, spaces, string, try, (<|>))
 import qualified Text.Parsec.Language as Lang
 import Text.Parsec.Text (Parser)
 import qualified Text.Parsec.Token as Tok
@@ -36,14 +36,15 @@ parseString = do
 
 parseNumber :: Parser LispVal -- TODO: Implement parser for decimal numbers
 parseNumber = do
+  -- TODO: Fix - parseNumber also parses numbers like 4a
   num <- negNum <|> posNum
   return (Number $ read num)
   where
     negNum = do
       char '-'
-      num <- many digit
+      num <- many1 digit
       return ("-" ++ num)
-    posNum = many digit
+    posNum = many1 digit
 
 parseNil :: Parser LispVal
 parseNil = do
