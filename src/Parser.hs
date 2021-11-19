@@ -78,6 +78,15 @@ parseList = do
   items <- sepBy parseExpr (many1 space <|> many1 newline)
   return (List items)
 
+parseSExpr :: Parser LispVal
+parseSExpr = do
+  char '('
+  spaces
+  items <- parseList
+  spaces
+  char ')'
+  return items
+
 parseQuote :: Parser LispVal -- TODO: Use separate type for quote?
 parseQuote = do
   char '\''
