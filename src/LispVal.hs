@@ -1,14 +1,14 @@
 module LispVal where
 
-import Control.Monad.Reader ( ReaderT )
+import Control.Monad.Reader (ReaderT)
 import Data.List (intercalate, intersperse)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 
 data LispVal
-  = Atom T.Text
+  = Atom T.Text -- Similar to variables
   | String T.Text
-  | Number Integer
+  | Number Integer -- TODO: Check how to use Num
   | List [LispVal]
   | Fun IFunc
   | Lambda IFunc EnvCtx
