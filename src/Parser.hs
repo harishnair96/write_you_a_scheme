@@ -31,6 +31,8 @@ parseExpr =
     <|> try parseNumber
     <|> try parseAtom
     <|> try parseString
+    <|> try parseQuote
+    <|> try parseSExpr
 
 parseAtom :: Parser LispVal -- TODO: Atoms can contain more than alphanum (parse other operators too)
 parseAtom = do
