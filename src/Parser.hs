@@ -53,7 +53,7 @@ parseNil = do
 
 parseBool :: Parser LispVal
 parseBool = do
-  bool <- parseTrue <|> parseFalse
+  bool <- try parseTrue <|> parseFalse
   return (Bool bool)
   where
     parseTrue = do
