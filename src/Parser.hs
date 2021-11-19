@@ -5,7 +5,7 @@ module Parser where
 import Control.Monad (MonadPlus (mzero))
 import Data.Functor.Identity (Identity)
 import qualified Data.Text as T
-import LispVal (LispVal (Atom, Bool, Nil, Number, String))
+import LispVal (LispVal (Atom, Bool, Nil, Number, String, List))
 import Text.Parsec (alphaNum, char, digit, letter, many, many1, noneOf, oneOf, sepBy, skipMany1, space, spaces, string, try, (<|>))
 import qualified Text.Parsec.Language as Lang
 import Text.Parsec.Text (Parser)
@@ -72,3 +72,9 @@ parseBool = do
     parseFalse = do
       string "#f"
       return False
+
+parseQuote :: Parser LispVal
+parseQuote = do
+    char '\''
+    body <- parseExpr
+    return (List [Atom "quote", body])
