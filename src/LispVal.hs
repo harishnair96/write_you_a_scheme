@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
+
 module LispVal where
 
 import Control.Monad.Reader (ReaderT)
@@ -17,7 +19,13 @@ data LispVal
 
 newtype IFunc = IFunc {fn :: [LispVal] -> Eval LispVal}
 
+-- TODO: Check why newtype is used instead of type as using type could possible avoid GeneralisedNewtypeDeriving extension?
 newtype Eval a = Eval {unEval :: ReaderT EnvCtx IO a}
+  deriving
+    ( Monad,
+      Applicative, -- Necessary in order to derive Monad
+      Functor -- Necessary in order to derive Applicative
+    )
 
 type EnvCtx = Map.Map T.Text LispVal
 
