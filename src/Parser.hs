@@ -1,14 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser where
+module Parser (parseContent) where
 
 import Control.Monad (MonadPlus (mzero))
 import Data.Functor.Identity (Identity)
 import qualified Data.Text as T
+import Debug.Trace (traceM)
 import LispVal (LispVal (Atom, Bool, List, Nil, Number, String))
-import Text.Parsec (alphaNum, char, digit, letter, many, many1, newline, noneOf, oneOf, sepBy, skipMany1, space, spaces, string, try, (<|>))
+import Text.Parsec (alphaNum, char, letter, oneOf, sepBy, try, (<|>))
 import qualified Text.Parsec.Language as Lang
 import Text.Parsec.Text (Parser)
+import Text.Parsec.Token (GenTokenParser (reserved))
 import qualified Text.Parsec.Token as Tok
 
 lexer :: Tok.GenTokenParser T.Text () Identity
@@ -24,73 +26,65 @@ lexer =
         Tok.opLetter = mzero
       }
 
-parseExpr :: Parser LispVal
-parseExpr =
-  try parseNil
-    <|> try parseBool
-    <|> try parseNumber
-    <|> try parseAtom
-    <|> try parseString
-    <|> try parseQuote
-    <|> try parseSExpr
+parseContent :: Parser LispVal
+parseContent = do
+  Tok.whiteSpace lexer
+  parseList
 
-parseAtom :: Parser LispVal -- TODO: Atoms can contain more than alphanum (parse other operators too)
+parseExpr :: Parser LispVal
+parseExpr = do
+  parseNil
+    <|> parseBool
+    <|> parseNumber
+    <|> parseAtom
+    <|> parseString
+    <|> parseQuote
+    <|> parseSExpr
+
+parseAtom :: Parser LispVal
 parseAtom = do
-  tok <- many1 alphaNum
+  tok <- Tok.identifier lexer
   return (Atom $ T.pack tok)
 
 parseString :: Parser LispVal
 parseString = do
-  char '\"' -- TODO: Check if reservedOp is needed. Check also in other parsers
-  str <- many $ noneOf "\""
-  char '\"'
+  str <- Tok.stringLiteral lexer
   return (String $ T.pack str)
 
-parseNumber :: Parser LispVal -- TODO: Implement parser for decimal numbers
-parseNumber = do
-  -- TODO: Fix - parseNumber also parses numbers like 4a
-  num <- negNum <|> posNum
-  return (Number $ read num)
-  where
-    negNum = do
-      char '-'
-      num <- many1 digit
-      return ("-" ++ num)
-    posNum = many1 digit
+parseNumber :: Parser LispVal -- TODO: Implement parser for floating numbers
+parseNumber = try $ do
+  num <- Tok.integer lexer
+  return (Number num)
 
 parseNil :: Parser LispVal
-parseNil = do
-  string "Nil"
+parseNil = try $ do
+  reserved lexer "Nil"
   return Nil
 
 parseBool :: Parser LispVal
-parseBool = do
-  bool <- try parseTrue <|> parseFalse
-  return (Bool bool)
-  where
-    parseTrue = do
-      string "#t"
-      return True
-    parseFalse = do
-      string "#f"
-      return False
+parseBool = try $ do
+  true <|> false
+
+true :: Parser LispVal
+true = do
+  reserved lexer "#t"
+  return (Bool True)
+
+false :: Parser LispVal
+false = do
+  reserved lexer "#f"
+  return (Bool False)
 
 parseList :: Parser LispVal
 parseList = do
-  items <- sepBy parseExpr (many1 space <|> many1 newline)
+  items <- sepBy parseExpr (Tok.whiteSpace lexer)
   return (List items)
 
 parseSExpr :: Parser LispVal
-parseSExpr = do
-  char '('
-  spaces
-  items <- parseList
-  spaces
-  char ')'
-  return items
+parseSExpr = Tok.parens lexer parseList
 
-parseQuote :: Parser LispVal -- TODO: Use separate type for quote?
+parseQuote :: Parser LispVal
 parseQuote = do
   char '\''
-  body <- parseExpr
+  body <- parseSExpr
   return (List [Atom "quote", body])
