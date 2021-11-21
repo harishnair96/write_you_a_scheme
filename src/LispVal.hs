@@ -2,7 +2,7 @@
 
 module LispVal where
 
-import Control.Monad.Reader (ReaderT)
+import Control.Monad.Reader (MonadReader, ReaderT)
 import Data.List (intercalate, intersperse)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -24,7 +24,8 @@ newtype Eval a = Eval {unEval :: ReaderT EnvCtx IO a}
   deriving
     ( Monad,
       Applicative, -- Necessary in order to derive Monad
-      Functor -- Necessary in order to derive Applicative
+      Functor, -- Necessary in order to derive Applicative
+      MonadReader EnvCtx -- For ask and local function
     )
 
 type EnvCtx = Map.Map T.Text LispVal
