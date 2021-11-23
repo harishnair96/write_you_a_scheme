@@ -21,8 +21,11 @@ eval lispVal = case lispVal of
   List [Atom "if", cond, onTrue, onFalse] -> lispIf cond onTrue onFalse
   List [Atom "let", List bindings, body] -> lispLet bindings body -- accepts a list of bindings and runs body in the modified environment
   List [Atom "define", atom, val] -> lispDefine atom val
+  List (Atom "begin" : rest) -> lispBegin rest
 
 -- TODO: Extract common functions like set env
+-- TODO: Use the term expression instead of statement/operations
+-- TODO: Use error messages from real scheme interpreter
 
 getFromEnv :: T.Text -> Eval LispVal
 getFromEnv key = do
@@ -57,3 +60,11 @@ lispDefine atom value = do
   case atom of
     Atom atom -> local (const $ Map.insert atom evalVal envCtx) (return value) -- TODO: Check what should be returned here?
     _ -> error "Invalid form of define statement" -- TODO: Proper error handling
+
+lispBegin :: [LispVal] -> Eval LispVal
+lispBegin exprs = case exprs of
+  [] -> error "No operands to begin" -- TODO: Proper error handling
+  [expr] -> eval expr
+  (expr : exprs) -> do
+    eval expr
+    lispBegin exprs
