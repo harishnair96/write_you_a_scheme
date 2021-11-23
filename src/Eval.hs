@@ -19,7 +19,10 @@ eval lispVal = case lispVal of
   List [Atom "write", val] -> return (String $ T.pack $ show val) -- write operator returns string representation of value without evaluation
   List (Atom "write" : rest) -> return (String $ T.pack $ show $ List rest)
   List [Atom "if", cond, onTrue, onFalse] -> lispIf cond onTrue onFalse
-  List [Atom "let", List bindings, body] -> lispLet bindings body
+  List [Atom "let", List bindings, body] -> lispLet bindings body -- accepts a list of bindings and runs body in the modified environment
+  List [Atom "define", atom, val] -> lispDefine atom val
+
+-- TODO: Extract common functions like set env
 
 getFromEnv :: T.Text -> Eval LispVal
 getFromEnv key = do
@@ -46,3 +49,11 @@ lispLet bindings body = do
       insertEnv _ _ = error "Invalid form on let statement" -- TODO: Proper error handling. Make function total.
   newEnv <- foldM insertEnv envCtx bindings
   local (const newEnv) (eval body)
+
+lispDefine :: LispVal -> LispVal -> Eval LispVal
+lispDefine atom value = do
+  envCtx <- ask
+  evalVal <- eval value
+  case atom of
+    Atom atom -> local (const $ Map.insert atom evalVal envCtx) (return value) -- TODO: Check what should be returned here?
+    _ -> error "Invalid form of define statement" -- TODO: Proper error handling
