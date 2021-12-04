@@ -40,3 +40,8 @@ instance Show LispVal where
     List lst -> "(" ++ intercalate "," (fmap show lst) ++ ")" -- TODO: Avoid using ++
     Fun _ -> "(internal function)"
     Lambda _ _ -> "(lambda function)"
+
+data LispException = LispException T.Text -- TODO: Add more specific exceptions
+
+instance Show LispException where
+  show (LispException msg) = T.unpack msg
