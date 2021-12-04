@@ -29,6 +29,7 @@ library
       Lib
       LispVal
       Parser
+      Prim
   other-modules:
       Paths_scheme
   hs-source-dirs:
