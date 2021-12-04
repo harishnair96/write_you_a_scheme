@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
+import Control.Exception (throw)
 import Control.Monad.Reader
 import Data.Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
-import LispVal (EnvCtx, Eval, IFunc (IFunc), LispVal (Atom, Bool, Fun, Lambda, List, Nil, Number, String))
+import LispVal (EnvCtx, Eval, IFunc (IFunc), LispException (LispException), LispVal (Atom, Bool, Fun, Lambda, List, Nil, Number, String))
 
 -- TODO: Use pattern synonyms?
 eval :: LispVal -> Eval LispVal
@@ -25,7 +26,7 @@ eval lispVal = case lispVal of
   List (Atom "begin" : rest) -> lispBegin rest
   List [Atom "lambda", List params, body] -> lispLambda params body
   List (x : xs) -> applyFunc x xs
-  _ -> error "error"
+  _ -> throw (LispException "error")
 
 -- TODO: Extract common functions like set env
 -- TODO: Use the term expression instead of statement/operations
@@ -37,7 +38,7 @@ getFromEnv key = do
   let res = Map.lookup key envCtx
   case res of
     Just val -> return val
-    Nothing -> error $ "Unable to find name" ++ T.unpack key -- TODO: Proper error handling. Make function total.
+    Nothing -> throw $ LispException $ T.concat ["Unable to find name", key]
 
 lispIf :: LispVal -> LispVal -> LispVal -> Eval LispVal
 lispIf cond onTrue onFalse = do
@@ -45,7 +46,7 @@ lispIf cond onTrue onFalse = do
   case bool of
     Bool True -> return onTrue
     Bool False -> return onFalse
-    _ -> error "Provided non boolean value for if condition" -- TODO: Proper error handling. Make function total.
+    _ -> throw $ LispException "Provided non boolean value for if condition"
 
 lispLet :: [LispVal] -> LispVal -> Eval LispVal
 lispLet bindings body = do
@@ -53,7 +54,7 @@ lispLet bindings body = do
   let insertEnv env (List [Atom atom, val]) = do
         val' <- eval val
         return $ Map.insert atom val env
-      insertEnv _ _ = error "Invalid form on let statement" -- TODO: Proper error handling. Make function total.
+      insertEnv _ _ = throw $ LispException "Invalid form on let statement"
   newEnv <- foldM insertEnv envCtx bindings
   local (const newEnv) (eval body)
 
@@ -63,11 +64,11 @@ lispDefine atom value = do
   evalVal <- eval value
   case atom of
     Atom atom -> local (const $ Map.insert atom evalVal envCtx) (return value) -- TODO: Check what should be returned here?
-    _ -> error "Invalid form of define statement" -- TODO: Proper error handling
+    _ -> throw $ LispException "Invalid form of define statement"
 
 lispBegin :: [LispVal] -> Eval LispVal
 lispBegin exprs = case exprs of
-  [] -> error "No operands to begin" -- TODO: Proper error handling
+  [] -> throw $ LispException "No operands to begin"
   [expr] -> eval expr
   (expr : exprs) -> do
     eval expr
@@ -79,7 +80,7 @@ lispLambda params body = do
   let func = IFunc $ \args -> do
         evalArgs <- mapM eval args
         let insertMap env (Atom param, val) = Map.insert param val env
-            insertMap _ _ = error "Invalid form of lambda"
+            insertMap _ _ = throw $ LispException "Invalid form of lambda"
         let envCtx' = foldl' insertMap envCtx (zip params evalArgs)
         local (const envCtx') (eval body)
   return (Lambda func envCtx)
@@ -89,4 +90,4 @@ applyFunc func args = do
   case func of
     Fun (IFunc fun) -> fun args
     Lambda (IFunc fun) envCtx -> local (const envCtx) (fun args)
-    _ -> error "Invalid function"
+    _ -> throw $ LispException "Invalid function"

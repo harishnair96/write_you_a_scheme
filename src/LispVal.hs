@@ -1,7 +1,10 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 
 module LispVal where
 
+import Control.Exception (Exception)
 import Control.Monad.Reader (MonadReader, ReaderT)
 import Data.List (intercalate, intersperse)
 import qualified Data.Map.Strict as Map
@@ -21,7 +24,7 @@ newtype IFunc = IFunc {fn :: [LispVal] -> Eval LispVal}
 
 -- TODO: Check why newtype is used instead of type as using type could possible avoid GeneralisedNewtypeDeriving extension?
 newtype Eval a = Eval {unEval :: ReaderT EnvCtx IO a}
-  deriving
+  deriving newtype
     ( Monad,
       Applicative, -- Necessary in order to derive Monad
       Functor, -- Necessary in order to derive Applicative
@@ -41,7 +44,7 @@ instance Show LispVal where
     Fun _ -> "(internal function)"
     Lambda _ _ -> "(lambda function)"
 
-data LispException = LispException T.Text -- TODO: Add more specific exceptions
+data LispException = LispException T.Text deriving (Exception) -- TODO: Add more specific exceptions
 
 instance Show LispException where
   show (LispException msg) = T.unpack msg
