@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
 import Control.Monad.Reader
 import Data.Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
-import LispVal (EnvCtx, Eval, LispVal (Atom, Bool, List, Nil, Number, String))
+import LispVal (EnvCtx, Eval, IFunc (IFunc), LispVal (Atom, Bool, Fun, Lambda, List, Nil, Number, String))
 
 -- TODO: Use pattern synonyms?
 eval :: LispVal -> Eval LispVal
@@ -22,6 +23,9 @@ eval lispVal = case lispVal of
   List [Atom "let", List bindings, body] -> lispLet bindings body -- accepts a list of bindings and runs body in the modified environment
   List [Atom "define", atom, val] -> lispDefine atom val
   List (Atom "begin" : rest) -> lispBegin rest
+  List [Atom "lambda", List params, body] -> lispLambda params body
+  List (x : xs) -> applyFunc x xs
+  _ -> error "error"
 
 -- TODO: Extract common functions like set env
 -- TODO: Use the term expression instead of statement/operations
@@ -68,3 +72,21 @@ lispBegin exprs = case exprs of
   (expr : exprs) -> do
     eval expr
     lispBegin exprs
+
+lispLambda :: [LispVal] -> LispVal -> Eval LispVal
+lispLambda params body = do
+  envCtx <- ask
+  let func = IFunc $ \args -> do
+        evalArgs <- mapM eval args
+        let insertMap env (Atom param, val) = Map.insert param val env
+            insertMap _ _ = error "Invalid form of lambda"
+        let envCtx' = foldl' insertMap envCtx (zip params evalArgs)
+        local (const envCtx') (eval body)
+  return (Lambda func envCtx)
+
+applyFunc :: LispVal -> [LispVal] -> Eval LispVal
+applyFunc func args = do
+  case func of
+    Fun (IFunc fun) -> fun args
+    Lambda (IFunc fun) envCtx -> local (const envCtx) (fun args)
+    _ -> error "Invalid function"

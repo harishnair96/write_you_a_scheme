@@ -12,8 +12,8 @@ data LispVal
   | String T.Text
   | Number Integer -- TODO: Check how to use Num
   | List [LispVal]
-  | Fun IFunc
-  | Lambda IFunc EnvCtx
+  | Fun IFunc -- TODO: Should this be a LispVal as this is also just a List?
+  | Lambda IFunc EnvCtx -- TODO: Should this be a LispVal as this is also just a List?
   | Nil
   | Bool Bool
 
