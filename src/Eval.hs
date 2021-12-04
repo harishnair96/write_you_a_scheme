@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
+module Eval (eval) where
+
 import Control.Exception (throw)
 import Control.Monad.Reader
 import Data.Foldable

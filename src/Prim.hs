@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+module Prim (primEnv) where
+
 import Control.Exception (throw)
 import Control.Monad (foldM)
 import Data.Map.Strict (fromList)
