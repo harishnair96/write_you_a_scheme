@@ -37,6 +37,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , directory
     , mtl
     , parsec
     , text
@@ -52,6 +53,7 @@ executable scheme-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , directory
     , mtl
     , parsec
     , scheme
@@ -69,6 +71,7 @@ test-suite scheme-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , directory
     , mtl
     , parsec
     , scheme

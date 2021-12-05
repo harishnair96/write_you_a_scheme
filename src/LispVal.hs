@@ -5,12 +5,12 @@
 module LispVal where
 
 import Control.Exception (Exception)
-import Control.Monad.Reader (MonadReader, ReaderT)
+import Control.Monad.Reader (MonadIO, MonadReader, ReaderT)
 import Data.List (intercalate, intersperse)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 
-data LispVal
+data LispVal -- TODO: Use GADT?
   = Atom T.Text -- Similar to variables
   | String T.Text
   | Number Integer -- TODO: Check how to use Num
@@ -28,7 +28,8 @@ newtype Eval a = Eval {unEval :: ReaderT EnvCtx IO a}
     ( Monad,
       Applicative, -- Necessary in order to derive Monad
       Functor, -- Necessary in order to derive Applicative
-      MonadReader EnvCtx -- For ask and local function
+      MonadReader EnvCtx, -- For ask and local function
+      MonadIO -- For liftIO
     )
 
 type EnvCtx = Map.Map T.Text LispVal
