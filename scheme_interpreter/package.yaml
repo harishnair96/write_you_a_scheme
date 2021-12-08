@@ -26,6 +26,7 @@ dependencies:
 - mtl
 - parsec
 - directory
+- haskeline
 
 library:
   source-dirs: src

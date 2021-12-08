@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
+
+--{-# LANGUAGE ScopedTypeVariables #-}
 
 module Eval (eval) where
 
-import Control.Exception (throw)
+import Control.Exception (Exception (fromException), SomeException, throw, try)
 import Control.Monad.Reader
 import Data.Foldable
 import qualified Data.Map.Strict as Map
@@ -88,8 +89,12 @@ lispLambda params body = do
   return (Lambda func envCtx)
 
 applyFunc :: LispVal -> [LispVal] -> Eval LispVal
-applyFunc func args = do
-  case func of
-    Fun (IFunc fun) -> fun args
-    Lambda (IFunc fun) envCtx -> local (const envCtx) (fun args)
-    _ -> throw $ LispException "Invalid function"
+applyFunc op args = do
+  case op of
+    Atom atom -> do
+      func <- getFromEnv atom
+      case func of
+        Fun (IFunc fun) -> fun args
+        Lambda (IFunc fun) envCtx -> local (const envCtx) (fun args)
+        _ -> throw $ LispException "Invalid function"
+    _ -> throw $ LispException "Invalid form of funcation application"

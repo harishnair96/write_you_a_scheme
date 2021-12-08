@@ -34,9 +34,9 @@ parseContent = do
 parseExpr :: Parser LispVal
 parseExpr = do
   parseNil
+    <|> parseAtom
     <|> parseBool
     <|> parseNumber
-    <|> parseAtom
     <|> parseString
     <|> parseQuote
     <|> parseSExpr
@@ -78,7 +78,9 @@ false = do
 parseList :: Parser LispVal
 parseList = do
   items <- sepBy parseExpr (Tok.whiteSpace lexer)
-  return (List items)
+  case items of
+    [x] -> return x
+    _ -> return (List items)
 
 parseSExpr :: Parser LispVal
 parseSExpr = Tok.parens lexer parseList
