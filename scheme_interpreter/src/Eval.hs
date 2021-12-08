@@ -25,7 +25,7 @@ eval lispVal = case lispVal of
   List (Atom "write" : rest) -> return (String $ T.pack $ show $ List rest)
   List [Atom "if", cond, onTrue, onFalse] -> lispIf cond onTrue onFalse
   List [Atom "let", List bindings, body] -> lispLet bindings body -- accepts a list of bindings and runs body in the modified environment
-  List [Atom "define", atom, val] -> lispDefine atom val
+  List (List [Atom "define", atom, val] : rest) -> lispDefine atom val (List rest)
   List (Atom "begin" : rest) -> lispBegin rest
   List [Atom "lambda", List params, body] -> lispLambda params body
   List (x : xs) -> applyFunc x xs
@@ -61,12 +61,12 @@ lispLet bindings body = do
   newEnv <- foldM insertEnv envCtx bindings
   local (const newEnv) (eval body)
 
-lispDefine :: LispVal -> LispVal -> Eval LispVal
-lispDefine atom value = do
+lispDefine :: LispVal -> LispVal -> LispVal -> Eval LispVal
+lispDefine atom value rest = do
   envCtx <- ask
   evalVal <- eval value
   case atom of
-    Atom atom -> local (const $ Map.insert atom evalVal envCtx) (return value) -- TODO: Check what should be returned here?
+    Atom atom -> local (const $ Map.insert atom evalVal envCtx) (eval value) -- TODO: Check what should be returned here?
     _ -> throw $ LispException "Invalid form of define statement"
 
 lispBegin :: [LispVal] -> Eval LispVal
