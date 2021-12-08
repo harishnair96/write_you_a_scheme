@@ -41,7 +41,7 @@ getFromEnv key = do
   let res = Map.lookup key envCtx
   case res of
     Just val -> return val
-    Nothing -> throw $ LispException $ T.concat ["Unable to find name", key]
+    Nothing -> throw $ LispException $ T.concat ["Unable to find name ", key]
 
 lispIf :: LispVal -> LispVal -> LispVal -> Eval LispVal
 lispIf cond onTrue onFalse = do
@@ -90,11 +90,12 @@ lispLambda params body = do
 
 applyFunc :: LispVal -> [LispVal] -> Eval LispVal
 applyFunc op args = do
+  evalArgs <- mapM eval args
   case op of
     Atom atom -> do
       func <- getFromEnv atom
       case func of
-        Fun (IFunc fun) -> fun args
-        Lambda (IFunc fun) envCtx -> local (const envCtx) (fun args)
+        Fun (IFunc fun) -> fun evalArgs
+        Lambda (IFunc fun) envCtx -> local (const envCtx) (fun evalArgs)
         _ -> throw $ LispException "Invalid function"
     _ -> throw $ LispException "Invalid form of funcation application"
