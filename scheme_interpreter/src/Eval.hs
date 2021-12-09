@@ -65,8 +65,9 @@ lispLet bindings body = do
 lispDefine :: LispVal -> LispVal -> LispVal -> Eval LispVal
 lispDefine atom value rest = do
   envCtx <- ask
+  evalValue <- eval value
   case atom of
-    Atom atom -> local (const $ Map.insert atom value envCtx) (eval rest) -- TODO: Check what should be returned here?
+    Atom atom -> local (const $ Map.insert atom evalValue envCtx) (eval rest)
     _ -> throw $ LispException "Invalid form of define statement"
 
 lispBegin :: [LispVal] -> Eval LispVal
