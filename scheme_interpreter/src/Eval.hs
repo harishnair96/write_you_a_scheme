@@ -92,11 +92,8 @@ lispLambda params body = do
 applyFunc :: LispVal -> [LispVal] -> Eval LispVal
 applyFunc op args = do
   evalArgs <- mapM eval args
-  case op of
-    Atom atom -> do
-      func <- getFromEnv atom
-      case func of
-        Fun (IFunc fun) -> fun evalArgs
-        Lambda (IFunc fun) envCtx -> local (const envCtx) (fun evalArgs)
-        _ -> throw $ LispException "Invalid function"
-    _ -> throw $ LispException "Invalid form of funcation application"
+  func <- eval op
+  case func of
+    Fun (IFunc fun) -> fun evalArgs
+    Lambda (IFunc fun) envCtx -> local (const envCtx) (fun evalArgs)
+    _ -> throw $ LispException "Invalid function"
