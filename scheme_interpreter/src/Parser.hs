@@ -83,7 +83,9 @@ parseList = do
     _ -> return (List items)
 
 parseSExpr :: Parser LispVal
-parseSExpr = Tok.parens lexer parseList
+parseSExpr = Tok.parens lexer $ do
+  items <- sepBy parseExpr (Tok.whiteSpace lexer)
+  return $ List items
 
 parseQuote :: Parser LispVal
 parseQuote = do
