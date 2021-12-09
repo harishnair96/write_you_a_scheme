@@ -47,19 +47,19 @@ type Binary = LispVal -> LispVal -> Eval LispVal
 type Unary = LispVal -> Eval LispVal
 
 addOp :: LispVal
-addOp = mkFn $ binopFold (numOp (+)) (Number 0)
+addOp = mkFn $ binopFold' (numOp (+))
 
 mulOp :: LispVal
-mulOp = mkFn $ binopFold (numOp (*)) (Number 1)
+mulOp = mkFn $ binopFold' (numOp (*))
 
 strConcatOp :: LispVal
-strConcatOp = mkFn $ binopFold (strOp T.append) (String "")
+strConcatOp = mkFn $ binopFold' (strOp T.append)
 
 subOp :: LispVal
 subOp = mkFn $ \case
   [] -> throw $ LispException "No args provided for subOp"
   [arg] -> numOp (*) (Number (-1)) arg
-  (arg : args) -> binopFold (numOp (-)) arg args
+  args -> binopFold' (numOp (-)) args
 
 ltOp :: LispVal
 ltOp = mkFn $ binOp (numCmp (<))
@@ -102,10 +102,10 @@ negOp :: LispVal
 negOp = mkFn $ unOp (numBool (< 0))
 
 andOp :: LispVal
-andOp = mkFn $ binOp (boolOp (&&))
+andOp = mkFn $ binopFold' (boolOp (&&))
 
 orOp :: LispVal
-orOp = mkFn $ binOp (boolOp (||))
+orOp = mkFn $ binopFold' (boolOp (||))
 
 consOp :: LispVal
 consOp = mkFn $
@@ -186,6 +186,11 @@ binopFold :: Binary -> LispVal -> [LispVal] -> Eval LispVal
 binopFold op arg1 args = case args of
   [] -> throw $ LispException "No args given"
   _ -> foldM op arg1 args
+
+binopFold' :: Binary -> [LispVal] -> Eval LispVal
+binopFold' op args = case args of
+  [] -> throw $ LispException "No args given"
+  (arg : args) -> binopFold op arg args
 
 -- Binary operation
 binOp :: Binary -> [LispVal] -> Eval LispVal
