@@ -65,8 +65,8 @@ lispIf :: LispVal -> LispVal -> LispVal -> Eval LispVal
 lispIf cond onTrue onFalse = do
   bool <- eval cond
   case bool of
-    Bool True -> return onTrue
-    Bool False -> return onFalse
+    Bool True -> eval onTrue
+    Bool False -> eval onFalse
     _ -> throw $ LispException "Provided non boolean value for if condition"
 
 lispLet :: [LispVal] -> LispVal -> Eval LispVal
