@@ -3,7 +3,7 @@ module Repl where
 import Control.Monad.Reader (MonadIO (liftIO), ReaderT (runReaderT))
 import qualified Data.Text as T
 import Eval (eval)
-import LispVal (Eval (unEval))
+import LispVal (Eval (unEval), LispVal)
 import Parser (parseContent)
 import Prim (primEnv)
 import System.Console.Haskeline
@@ -32,5 +32,5 @@ repl = do
           outputStrLn $ show res
           repl
 
-repl' :: IO ()
-repl' = runInputT defaultSettings repl
+replLoop :: IO ()
+replLoop = runInputT defaultSettings repl

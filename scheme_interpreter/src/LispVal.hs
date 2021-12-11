@@ -34,6 +34,16 @@ newtype Eval a = Eval {unEval :: ReaderT EnvCtx IO a}
 
 type EnvCtx = Map.Map T.Text LispVal
 
+instance Eq LispVal where
+  (==) v1 v2 = case (v1, v2) of
+    (Atom a1, Atom a2) -> a1 == a2
+    (String s1, String s2) -> s1 == s2
+    (Number n1, Number n2) -> n1 == n2
+    (List vs1, List vs2) -> vs1 == vs2
+    (Nil, Nil) -> True
+    (Bool b1, Bool b2) -> b1 == b2
+    _ -> False
+
 instance Show LispVal where
   show val = case val of
     Atom atom -> show atom

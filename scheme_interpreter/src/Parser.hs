@@ -34,9 +34,9 @@ parseContent = do
 parseExpr :: Parser LispVal
 parseExpr = do
   parseNil
+    <|> parseNumber
     <|> parseAtom
     <|> parseBool
-    <|> parseNumber
     <|> parseString
     <|> parseQuote
     <|> parseSExpr
@@ -89,6 +89,6 @@ parseSExpr = Tok.parens lexer $ do
 
 parseQuote :: Parser LispVal
 parseQuote = do
-  char '\''
+  oneOf "`'"
   body <- parseSExpr
   return (List [Atom "quote", body])

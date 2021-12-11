@@ -40,6 +40,7 @@ library
     , containers
     , directory
     , haskeline
+    , hspec
     , mtl
     , parsec
     , text
@@ -57,6 +58,7 @@ executable scheme-exe
     , containers
     , directory
     , haskeline
+    , hspec
     , mtl
     , parsec
     , scheme
@@ -76,6 +78,7 @@ test-suite scheme-test
     , containers
     , directory
     , haskeline
+    , hspec
     , mtl
     , parsec
     , scheme

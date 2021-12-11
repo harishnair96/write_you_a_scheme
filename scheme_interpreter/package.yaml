@@ -27,6 +27,7 @@ dependencies:
 - parsec
 - directory
 - haskeline
+- hspec
 
 library:
   source-dirs: src
@@ -52,3 +53,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - scheme
+    - hspec
