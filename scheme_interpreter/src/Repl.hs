@@ -11,7 +11,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Eval (eval, evalWithEnv, runEval)
 import LispVal (EnvCtx, Eval (unEval), LispException (LispException), LispVal)
-import Parser (parseInput)
+import Parser (parseInput, parseInputs)
 import Prim (primEnv)
 import System.Console.Haskeline
   ( InputT,
@@ -26,10 +26,11 @@ type Repl a = InputT IO a
 repl :: Repl ()
 repl = do
   minput <- getInputLine ">>> "
+  stdlib <- liftIO $ readFile "./src/stdlib.scm"
   case minput of
     Nothing -> outputStrLn "Quitting."
     Just input -> do
-      op <- either throwParseError evalParseResult (parseInput input)
+      op <- either throwParseError evalParseResult (parseInputs [stdlib, input])
       outputStrLn $ show op
       repl
   where

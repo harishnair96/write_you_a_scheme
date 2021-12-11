@@ -48,8 +48,7 @@ evalWithEnv :: LispVal -> EnvCtx -> Eval LispVal
 evalWithEnv input env = local (const env) (eval input)
 
 runEval :: LispVal -> EnvCtx -> IO LispVal
-runEval src env = do
-  runReaderT (unEval $ evalWithEnv src env) env
+runEval input env = runReaderT (unEval $ evalWithEnv input env) env
 
 emptyEnv :: EnvCtx
 emptyEnv = Map.empty

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser (parseInput) where
+module Parser (parseInput, parseInputs) where
 
 import Control.Monad (MonadPlus (mzero))
 import Data.Functor.Identity (Identity)
@@ -28,6 +28,11 @@ lexer =
 
 parseInput :: String -> Either ParseError LispVal
 parseInput src = parse parseContent "" (T.pack src)
+
+parseInputs :: [String] -> Either ParseError LispVal
+parseInputs srcs = do
+  res <- mapM parseInput srcs
+  return $ List res
 
 parseContent :: Parser LispVal
 parseContent = do
