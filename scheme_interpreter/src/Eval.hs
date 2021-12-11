@@ -31,6 +31,8 @@ eval lispVal = case lispVal of
   List (List [Atom "define", atom, val] : rest) -> lispDefine atom val (List rest)
   List (Atom "begin" : rest) -> lispBegin rest
   List [Atom "lambda", List params, body] -> lispLambda params body
+  List [Atom "cdr", List [Atom "quote", List (x : xs)]] -> return $ List xs
+  List [Atom "car", List [Atom "quote", List (x : xs)]] -> return x
   List (x : xs) -> applyFunc x xs
   _ -> throw (LispException "error")
 
