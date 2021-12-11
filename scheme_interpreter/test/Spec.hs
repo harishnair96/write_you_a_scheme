@@ -9,6 +9,7 @@ import LispVal
   )
 import Parser (parseInput)
 import Prim (primEnv)
+import Repl (runLisp)
 import System.IO.Unsafe (unsafePerformIO)
 import Test.Hspec
   ( Expectation,
@@ -16,6 +17,7 @@ import Test.Hspec
     describe,
     hspec,
     it,
+    runIO,
     shouldBe,
   )
 
@@ -58,9 +60,15 @@ spec = do
     it "' Quoted" $
       parsed "'(5 Nil)" (`shouldBe` List [Atom "quote", List [Number 5, Nil]])
 
+  describe "StdLib" $ do
+    it "id" $
+      evaled "(id 5)" (`shouldBe` Number 5)
+
 parsed :: String -> (LispVal -> Expectation) -> Expectation
-parsed input assert =
-  let parseResult = parseInput input
-   in case parseResult of
-        Left lv -> fail (show lv)
-        Right res -> assert res
+parsed input assert = either (fail . show) assert (parseInput input)
+
+evaled :: String -> (LispVal -> Expectation) -> Expectation
+evaled input assert = do
+  let stdLib = unsafePerformIO $ readFile "./src/stdlib.scm" -- TODO: Check if unsafe is ok
+      res = unsafePerformIO $ runLisp [stdLib, input] primEnv
+  assert res

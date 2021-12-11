@@ -30,7 +30,7 @@ repl = do
   case minput of
     Nothing -> outputStrLn "Quitting."
     Just input -> do
-      op <- either throwParseError evalParseResult (parseInputs [stdlib, input])
+      op <- liftIO $ runLisp [stdlib, input] primEnv
       outputStrLn $ show op
       repl
   where
@@ -39,3 +39,9 @@ repl = do
 
 replLoop :: IO ()
 replLoop = runInputT defaultSettings repl
+
+runLisp :: [String] -> EnvCtx -> IO LispVal
+runLisp inputs env = either throwParseError evalParseResult (parseInputs inputs)
+  where
+    throwParseError err = throw $ LispException (T.pack $ show err)
+    evalParseResult res = runEval res env
