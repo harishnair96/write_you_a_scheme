@@ -1,9 +1,15 @@
 module Repl where
 
-import Control.Monad.Reader (MonadIO (liftIO), ReaderT (runReaderT))
+import Control.Exception (throw)
+import Control.Monad.Reader
+  ( MonadIO (liftIO),
+    MonadReader (local),
+    ReaderT (runReaderT),
+  )
+import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
-import Eval (eval)
-import LispVal (Eval (unEval), LispVal)
+import Eval (eval, evalSrc, runEval)
+import LispVal (EnvCtx, Eval (unEval), LispException (LispException), LispVal)
 import Parser (parseContent)
 import Prim (primEnv)
 import System.Console.Haskeline
@@ -23,14 +29,9 @@ repl = do
   case minput of
     Nothing -> outputStrLn "Quitting."
     Just input -> do
-      let parseResult = parse parseContent "" (T.pack input)
-      case parseResult of
-        Left pe -> outputStrLn (show pe)
-        Right lv -> do
-          outputStrLn (show lv)
-          res <- liftIO $ runReaderT (unEval $ eval lv) primEnv
-          outputStrLn $ show res
-          repl
+      res <- liftIO $ runEval input primEnv
+      outputStrLn $ show res
+      repl
 
 replLoop :: IO ()
 replLoop = runInputT defaultSettings repl

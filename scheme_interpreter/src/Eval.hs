@@ -2,14 +2,16 @@
 
 --{-# LANGUAGE ScopedTypeVariables #-}
 
-module Eval (eval) where
+module Eval (eval, evalSrc, runEval) where
 
 import Control.Exception (Exception (fromException), SomeException, throw, try)
 import Control.Monad.Reader
 import Data.Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
-import LispVal (EnvCtx, Eval, IFunc (IFunc), LispException (LispException), LispVal (Atom, Bool, Fun, Lambda, List, Nil, Number, String))
+import LispVal (EnvCtx, Eval (unEval), IFunc (IFunc), LispException (LispException), LispVal (Atom, Bool, Fun, Lambda, List, Nil, Number, String))
+import Parser (parseContent)
+import Text.Parsec (parse)
 
 -- TODO: Use pattern synonyms?
 eval :: LispVal -> Eval LispVal
@@ -35,6 +37,21 @@ eval lispVal = case lispVal of
 -- TODO: Extract common functions like set env
 -- TODO: Use the term expression instead of statement/operations
 -- TODO: Use error messages from real scheme interpreter
+
+-- Evaluates the provided input with primitive environment
+evalSrc :: String -> EnvCtx -> Eval LispVal
+evalSrc src env = do
+  let parseResult = parse parseContent "" (T.pack src)
+  case parseResult of
+    Left pe -> throw $ LispException (T.pack $ show pe)
+    Right lv -> local (const env) (eval lv)
+
+runEval :: String -> EnvCtx -> IO LispVal
+runEval src env = do
+  runReaderT (unEval $ evalSrc src env) emptyEnv
+
+emptyEnv :: EnvCtx
+emptyEnv = Map.empty
 
 getFromEnv :: T.Text -> Eval LispVal
 getFromEnv key = do
