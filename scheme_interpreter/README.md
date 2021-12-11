@@ -1,3 +1,3 @@
 # scheme
 
-A scheme interpreter created by me in Haskell with the intention of teaching myself Haskell. This project is mainly based on <https://wespiser.com/writings/wyas/00_overview.html>. I also use this as a place to experiment different things with Haskell.
+A Scheme interpreter written in Haskell roughly based on <https://wespiser.com/writings/wyas/00_overview.html>. My intention with this project is to learn and experiment with Haskell.
