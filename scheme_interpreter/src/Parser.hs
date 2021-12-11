@@ -31,8 +31,8 @@ parseInput src = parse parseContent "" (T.pack src)
 
 parseInputs :: [String] -> Either ParseError LispVal
 parseInputs srcs = do
-  res <- mapM parseInput srcs
-  return $ List res
+  let combinedSrcs = foldl1 (++) srcs -- TODO: Figure out a better way
+  parseInput combinedSrcs
 
 parseContent :: Parser LispVal
 parseContent = do
