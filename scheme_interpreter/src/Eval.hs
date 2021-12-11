@@ -2,16 +2,19 @@
 
 --{-# LANGUAGE ScopedTypeVariables #-}
 
-module Eval (eval, evalSrc, runEval) where
+module Eval (eval, evalWithEnv, runEval) where
 
 import Control.Exception (Exception (fromException), SomeException, throw, try)
 import Control.Monad.Reader
-import Data.Foldable
+  ( MonadReader (ask, local),
+    ReaderT (runReaderT),
+    foldM,
+    liftIO,
+  )
+import Data.Foldable (Foldable (foldl'))
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import LispVal (EnvCtx, Eval (unEval), IFunc (IFunc), LispException (LispException), LispVal (Atom, Bool, Fun, Lambda, List, Nil, Number, String))
-import Parser (parseContent)
-import Text.Parsec (parse)
 
 -- TODO: Use pattern synonyms?
 eval :: LispVal -> Eval LispVal
@@ -41,16 +44,12 @@ eval lispVal = case lispVal of
 -- TODO: Use error messages from real scheme interpreter
 
 -- Evaluates the provided input with primitive environment
-evalSrc :: String -> EnvCtx -> Eval LispVal
-evalSrc src env = do
-  let parseResult = parse parseContent "" (T.pack src)
-  case parseResult of
-    Left pe -> throw $ LispException (T.pack $ show pe)
-    Right lv -> local (const env) (eval lv)
+evalWithEnv :: LispVal -> EnvCtx -> Eval LispVal
+evalWithEnv input env = local (const env) (eval input)
 
-runEval :: String -> EnvCtx -> IO LispVal
+runEval :: LispVal -> EnvCtx -> IO LispVal
 runEval src env = do
-  runReaderT (unEval $ evalSrc src env) emptyEnv
+  runReaderT (unEval $ evalWithEnv src env) env
 
 emptyEnv :: EnvCtx
 emptyEnv = Map.empty

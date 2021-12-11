@@ -7,7 +7,7 @@ import LispVal
   ( Eval (unEval),
     LispVal (Atom, Bool, List, Nil, Number, String),
   )
-import Parser (parseContent)
+import Parser (parseInput)
 import Prim (primEnv)
 import System.IO.Unsafe (unsafePerformIO)
 import Test.Hspec
@@ -18,7 +18,6 @@ import Test.Hspec
     it,
     shouldBe,
   )
-import Text.Parsec (ParseError, parse, parseTest)
 
 main :: IO ()
 main = hspec spec
@@ -61,16 +60,7 @@ spec = do
 
 parsed :: String -> (LispVal -> Expectation) -> Expectation
 parsed input assert =
-  let parseResult = parse parseContent "" (T.pack input)
+  let parseResult = parseInput input
    in case parseResult of
         Left lv -> fail (show lv)
         Right res -> assert res
-
-evaled :: T.Text -> (LispVal -> Expectation) -> Expectation
-evaled input assert = do
-  let parseResult = parse parseContent "" input
-  case parseResult of
-    Left l -> fail (show l)
-    Right parsed -> do
-      let res = unsafePerformIO $ runReaderT (unEval $ eval parsed) primEnv
-      assert res

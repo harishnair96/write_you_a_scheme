@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser (parseContent) where
+module Parser (parseInput) where
 
 import Control.Monad (MonadPlus (mzero))
 import Data.Functor.Identity (Identity)
 import qualified Data.Text as T
 import Debug.Trace (traceM)
 import LispVal (LispVal (Atom, Bool, List, Nil, Number, String))
-import Text.Parsec (alphaNum, char, letter, oneOf, sepBy, try, (<|>))
+import Text.Parsec (ParseError, alphaNum, char, letter, oneOf, parse, sepBy, try, (<|>))
 import qualified Text.Parsec.Language as Lang
 import Text.Parsec.Text (Parser)
 import Text.Parsec.Token (GenTokenParser (reserved))
@@ -26,6 +26,9 @@ lexer =
         Tok.opLetter = mzero
       }
 
+parseInput :: String -> Either ParseError LispVal
+parseInput src = parse parseContent "" (T.pack src)
+
 parseContent :: Parser LispVal
 parseContent = do
   Tok.whiteSpace lexer
@@ -34,8 +37,8 @@ parseContent = do
 parseExpr :: Parser LispVal
 parseExpr = do
   parseNil
-    <|> parseNumber
     <|> parseAtom
+    <|> parseNumber
     <|> parseBool
     <|> parseString
     <|> parseQuote

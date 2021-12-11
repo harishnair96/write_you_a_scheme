@@ -6,11 +6,12 @@ import Control.Monad.Reader
     MonadReader (local),
     ReaderT (runReaderT),
   )
+import Data.Either (either)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
-import Eval (eval, evalSrc, runEval)
+import Eval (eval, evalWithEnv, runEval)
 import LispVal (EnvCtx, Eval (unEval), LispException (LispException), LispVal)
-import Parser (parseContent)
+import Parser (parseInput)
 import Prim (primEnv)
 import System.Console.Haskeline
   ( InputT,
@@ -19,7 +20,6 @@ import System.Console.Haskeline
     outputStrLn,
     runInputT,
   )
-import Text.Parsec (parse)
 
 type Repl a = InputT IO a
 
@@ -29,9 +29,12 @@ repl = do
   case minput of
     Nothing -> outputStrLn "Quitting."
     Just input -> do
-      res <- liftIO $ runEval input primEnv
-      outputStrLn $ show res
+      op <- either throwParseError evalParseResult (parseInput input)
+      outputStrLn $ show op
       repl
+  where
+    throwParseError err = throw $ LispException (T.pack $ show err)
+    evalParseResult res = liftIO $ runEval res primEnv
 
 replLoop :: IO ()
 replLoop = runInputT defaultSettings repl
