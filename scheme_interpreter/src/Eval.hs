@@ -2,7 +2,7 @@
 
 --{-# LANGUAGE ScopedTypeVariables #-}
 
-module Eval (eval, evalWithEnv, runEval) where
+module Eval (runEval) where
 
 import Control.Exception (Exception (fromException), SomeException, throw, try)
 import Control.Monad.Reader
@@ -47,8 +47,9 @@ eval lispVal = case lispVal of
 evalWithEnv :: LispVal -> EnvCtx -> Eval LispVal
 evalWithEnv input env = local (const env) (eval input)
 
-runEval :: LispVal -> EnvCtx -> IO LispVal
-runEval input env = runReaderT (unEval $ evalWithEnv input env) env
+-- Evaluates the parse lisp program and returns an error string or a lispval
+runEval :: LispVal -> EnvCtx -> IO (Either SomeException LispVal)
+runEval input env = try (runReaderT (unEval $ evalWithEnv input env) env)
 
 emptyEnv :: EnvCtx
 emptyEnv = Map.empty

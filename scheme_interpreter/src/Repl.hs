@@ -1,6 +1,6 @@
 module Repl where
 
-import Control.Exception (throw)
+import Control.Exception (SomeException, throw)
 import Control.Monad.Reader
   ( MonadIO (liftIO),
     MonadReader (local),
@@ -9,7 +9,7 @@ import Control.Monad.Reader
 import Data.Either (either)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
-import Eval (eval, evalWithEnv, runEval)
+import Eval (runEval)
 import LispVal (EnvCtx, Eval (unEval), LispException (LispException), LispVal)
 import Parser (parseInput, parseInputs)
 import Prim (primEnv)
@@ -31,7 +31,7 @@ repl = do
     Nothing -> outputStrLn "Quitting."
     Just input -> do
       op <- liftIO $ runLisp [stdlib, input] primEnv
-      outputStrLn $ show op
+      outputStrLn $ either show show op
       repl
   where
     throwParseError err = throw $ LispException (T.pack $ show err)
@@ -40,7 +40,7 @@ repl = do
 replLoop :: IO ()
 replLoop = runInputT defaultSettings repl
 
-runLisp :: [String] -> EnvCtx -> IO LispVal
+runLisp :: [String] -> EnvCtx -> IO (Either SomeException LispVal)
 runLisp inputs env = either throwParseError evalParseResult (parseInputs inputs)
   where
     throwParseError err = throw $ LispException (T.pack $ show err)

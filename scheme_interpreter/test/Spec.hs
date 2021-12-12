@@ -2,7 +2,7 @@
 
 import Control.Monad.Reader (ReaderT (runReaderT))
 import qualified Data.Text as T
-import Eval (eval)
+import Eval (runEval)
 import LispVal
   ( Eval (unEval),
     LispVal (Atom, Bool, List, Nil, Number, String),
@@ -71,4 +71,4 @@ evaled :: String -> (LispVal -> Expectation) -> Expectation
 evaled input assert = do
   let stdLib = unsafePerformIO $ readFile "./src/stdlib.scm" -- TODO: Check if unsafe is ok
       res = unsafePerformIO $ runLisp [stdLib, input] primEnv
-  assert res
+  either (fail . show) assert res
