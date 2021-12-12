@@ -7,7 +7,7 @@ import Data.Functor.Identity (Identity)
 import qualified Data.Text as T
 import Debug.Trace (traceM)
 import LispVal (LispVal (Atom, Bool, List, Nil, Number, String))
-import Text.Parsec (ParseError, alphaNum, char, letter, oneOf, parse, sepBy, try, (<|>))
+import Text.Parsec (ParseError, alphaNum, char, digit, letter, lookAhead, oneOf, parse, sepBy, try, (<|>))
 import qualified Text.Parsec.Language as Lang
 import Text.Parsec.Text (Parser)
 import Text.Parsec.Token (GenTokenParser (reserved))
@@ -42,8 +42,8 @@ parseContent = do
 parseExpr :: Parser LispVal
 parseExpr = do
   parseNil
-    <|> parseAtom
     <|> parseNumber
+    <|> parseAtom
     <|> parseBool
     <|> parseString
     <|> parseQuote
@@ -61,8 +61,13 @@ parseString = do
 
 parseNumber :: Parser LispVal -- TODO: Implement parser for floating numbers
 parseNumber = try $ do
+  try $ lookAhead $ digit <|> signedDigit
   num <- Tok.integer lexer
   return (Number num)
+  where
+    signedDigit = do
+      oneOf "+-"
+      digit
 
 parseNil :: Parser LispVal
 parseNil = try $ do
