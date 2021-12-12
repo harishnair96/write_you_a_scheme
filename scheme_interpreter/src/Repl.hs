@@ -29,6 +29,7 @@ repl = do
   stdlib <- liftIO $ readFile "./src/stdlib.scm"
   case minput of
     Nothing -> outputStrLn "Quitting."
+    Just "" -> repl
     Just input -> do
       op <- liftIO $ runLisp [stdlib, input] primEnv
       outputStrLn $ either show show op
